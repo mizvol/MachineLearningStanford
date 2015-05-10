@@ -62,23 +62,62 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+%Cont function
+X1 = [ones(m, 1) X];
+yBin = zeros(m, num_labels);
 
+for i = 1:m
+    yBin(i, y(i)) = 1;
+end
 
+z1 = X1  * Theta1';
+a1 = sigmoid(z1);
+a11 = [ones(m, 1), a1];
 
+z2 = a11 * Theta2';
+a2 = sigmoid(z2);
 
+J = sum(sum(-yBin .* log(a2) - (1 - yBin) .* log(1 - a2)))/m;
 
+%Regularization
+J = J + (sum(sum(Theta1(:, 2:end) .^ 2)) + sum(sum(Theta2(:, 2:end) .^ 2))) * lambda / (2 * m);
 
+%BackProp
+for t = 1:m
+    % Error for sample
+    a_1 = X(t,:)';
+    a_1 = [1; a_1];
+           
+    z_2 = Theta1 * a_1;
+    
+    a_2 = sigmoid(z_2);
+    a_2 = [1; a_2];
+    
+    z_3 = Theta2 * a_2;
+    
+    a_3 = sigmoid(z_3);
+    
+    % Error
+    yt = yBin(t,:)';
+    delta_3 = a_3 - yt; 
+    
+    % Propagate error backwards
+    delta_2 = (Theta2' * delta_3) .* sigmoidGradient([1; z_2]);
+    delta_2 = delta_2(2:end); 
 
+    dt2 = delta_3 * a_2';
+    dt1 = delta_2 * a_1';
+ 
+    Theta2_grad = Theta2_grad + dt2;
+    Theta1_grad = Theta1_grad + dt1;
+end
 
+Theta1_grad = (1/m) * Theta1_grad;
+Theta2_grad = (1/m) * Theta2_grad ;
 
-
-
-
-
-
-
-
-
+% Regularization
+Theta1_grad(:,2:end) = Theta1_grad(:,2:end) + (lambda/m) * Theta1(:,2:end);
+Theta2_grad(:,2:end) = Theta2_grad(:,2:end) + (lambda/m) * Theta2(:,2:end);
 
 % -------------------------------------------------------------
 
